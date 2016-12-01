@@ -1,6 +1,6 @@
 angular.module('starter.controllers', [])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+.controller('AppCtrl', function($scope, $ionicModal, $timeout, $http, $ionicPopup) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -25,20 +25,55 @@ angular.module('starter.controllers', [])
   };
 
   // Open the login modal
-  $scope.login = function() {
+  $scope.login = function(logoff) {
+    if(logoff == 0) {
+        localStorage.setItem("login", 0);
+    }
     $scope.modal.show();
   };
 
   // Perform the login action when the user submits the login form
   $scope.doLogin = function() {
-    console.log('Doing login', $scope.loginData);
+    console.log('Trying to login');
+    
+    //API LINK
+    var link = 'http://localhost/api.php';
+    if($scope.loginData.username  && $scope.loginData.password) {
+        $http.post(link, {username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
+            $scope.data = res.data;
+            console.log($scope.data.error);
+            if($scope.data.error == 1){
+                $ionicPopup.alert({
+                      title: 'Datos erroneos!',
+                      template: '<center>Revise su usuario y su contraseña</center>'
+                });
+            } else {
+                localStorage.setItem("login", 1);
+                $scope.userdata = {
+                    id      : $scope.data.ID,
+                    name    : $scope.data.NAME,
+                    room    : $scope.data.ROOM,
+                    pic     : "http://localhost/img/"+$scope.data.PICTURE,
+                    datein  : $scope.data.DATEIN,
+                    dateout : $scope.data.DATEOUT,
+                }
+                $scope.closeLogin();
+            }
+        });
+    } else {
+        $ionicPopup.alert({
+            title: 'Campos vacios!',
+            template: '<center>Introduzca sus datos de acceso</center>'
+        });
+    }
 
-    // Simulate a login delay. Remove this and replace with your login
-    // code if using a login system
-    $timeout(function() {
-      $scope.closeLogin();
-    }, 1000);
   };
+    //CHECK IF USER IS LOGGED, IF NOT, WE GET THE LOGIN FORM
+   $scope.$on('$ionicView.enter', function(e) {
+        if(localStorage.login == 0) {
+           $scope.modal.show();
+         }
+    });
 })
 
 .controller('ReservasCtrl', function($scope, $ionicPopup) {

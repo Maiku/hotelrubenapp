@@ -20,9 +20,11 @@
     <ion-content>
         <div class="list">
             <a class="item item-avatar" href="#">
-              <img src="img/avt.jpg">
-              <h2>Rick Sanchez</h2>
-              <p>Habitación: 216</p>
+              <img src="{{userdata.pic}}">
+              <h2>{{userdata.name}}</h2>
+              <p>Habitación: {{userdata.room}}</p>
+              <p>Entrada: {{userdata.datein}}</p>
+              <p>Salida: {{userdata.dateout}}</p>
             </a>
             <div class="item item-divider"></div>
             <ion-list>
@@ -41,7 +43,7 @@
             </ion-list>
             <div class="item item-divider"></div>
             <ion-list>
-                <ion-item menu-close class="item-icon-left" ng-click="login()">
+                <ion-item menu-close class="item-icon-left" ng-click="login('0')">
                     Desconectar     
                     <i class="icon ion-power"></i>                
                 </ion-item>
