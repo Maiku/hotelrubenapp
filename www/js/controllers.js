@@ -41,7 +41,7 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('ReservasCtrl', function($scope) {
+.controller('ReservasCtrl', function($scope, $ionicPopup) {
   $scope.playlists = [
     { title: 'Reggae', id: 1 },
     { title: 'Chill', id: 2 },
@@ -50,6 +50,25 @@ angular.module('starter.controllers', [])
     { title: 'Rap', id: 5 },
     { title: 'Cowbell', id: 6 }
   ];
+    $scope.deleteActividad = function(id){
+        console.log('Delete?');
+        var confirmPopup = $ionicPopup.confirm({
+            title: 'Cancelar actividad',
+            template: '<div style="text-align: center">¿Desea cancelar la actividad?</div>',
+            cancelText: 'No',
+            cancelType: 'button-calm',
+            okText: 'Cancelar',
+            okType: 'button-assertive'
+        });
+
+        confirmPopup.then(function(res) {
+            if(res) {
+              console.log('You are sure');
+            } else {
+              console.log('You are not sure');
+            }
+        });
+    }
 })
 
 .controller('PlaylistCtrl', function($scope, $stateParams) {
