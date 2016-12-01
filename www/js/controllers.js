@@ -70,7 +70,7 @@ angular.module('starter.controllers', [])
   };
     //CHECK IF USER IS LOGGED, IF NOT, WE GET THE LOGIN FORM
    $scope.$on('$ionicView.enter', function(e) {
-        if(localStorage.login == 0) {
+        if(localStorage.login == 0 || !localStorage.login) {
            $scope.modal.show();
          }
     });
