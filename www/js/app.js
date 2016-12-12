@@ -36,7 +36,8 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     url: '/spa',
     views: {
       'menuContent': {
-        templateUrl: 'templates/spa.html'
+        templateUrl: 'templates/spa.html',
+        controller: 'ReservasCtrl'
       }
     }
   })
@@ -45,7 +46,8 @@ angular.module('starter', ['ionic', 'starter.controllers'])
       url: '/actividades',
       views: {
         'menuContent': {
-          templateUrl: 'templates/actividades.html'
+          templateUrl: 'templates/actividades.html',
+          controller: 'ReservasCtrl'
         }
       }
     })

@@ -7,8 +7,12 @@
         <div class="item item-text-wrap">
           Relajante masaje a base de aceites aromaticos
         </div>
-        <div class="item item-divider text-right">
-            <button class="button ion-android-done button-positive" ng-click="reservarMasaje()"></button>
+        <div class="item item-input-inset">
+            <label class="item item-input-wrapper">		
+                <input type="date" ng-model="reserva.fecha">
+                <input type="time" ng-model="reserva.hora" formatted-time>
+            </label>
+            <button class="button ion-android-done button-positive" ng-click="reservarActividad(2, reserva.fecha, reserva.hora)"></button>
         </div>
     </div>
     <div class="card">
@@ -18,8 +22,12 @@
         <div class="item item-text-wrap">
           Dale a tu cara el cuidado que se merece con nuestro servicio
         </div>
-        <div class="item item-divider text-right">
-            <button class="button ion-android-done button-positive" ng-click="reservarFacial()"></button>
+        <div class="item item-input-inset">
+            <label class="item item-input-wrapper">		
+                <input type="date" ng-model="reserva.fecha2">
+                <input type="time" ng-model="reserva.hora2" formatted-time>
+            </label>
+            <button class="button ion-android-done button-positive" ng-click="reservarActividad(3, reserva.fecha2, reserva.hora2)"></button>
         </div>
     </div>
   </ion-content>

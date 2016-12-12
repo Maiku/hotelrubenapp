@@ -39,7 +39,7 @@ angular.module('starter.controllers', [])
     //API LINK
     var link = 'http://localhost/api.php';
     if($scope.loginData.username  && $scope.loginData.password) {
-        $http.post(link, {username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
+        $http.post(link, {action: 'login', username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
             $scope.data = res.data;
             console.log($scope.data.error);
             if($scope.data.error == 1){
@@ -49,6 +49,7 @@ angular.module('starter.controllers', [])
                 });
             } else {
                 localStorage.setItem("login", 1);
+                localStorage.setItem("iduser", $scope.data.ID);
                 $scope.userdata = {
                     id      : $scope.data.ID,
                     name    : $scope.data.NAME,
@@ -76,7 +77,7 @@ angular.module('starter.controllers', [])
     });
 })
 
-.controller('ReservasCtrl', function($scope, $ionicPopup) {
+.controller('ReservasCtrl', function($scope, $ionicPopup, $http) {
   $scope.playlists = [
     { title: 'Reggae', id: 1 },
     { title: 'Chill', id: 2 },
@@ -99,6 +100,52 @@ angular.module('starter.controllers', [])
         confirmPopup.then(function(res) {
             if(res) {
               console.log('You are sure');
+            } else {
+              console.log('You are not sure');
+            }
+        });
+    }
+    $scope.reservarActividad = function(id, fecha, hora){
+        console.log('Reservar?');
+        var fechaS = new Date(fecha);
+        var fechaS = fechaS.getFullYear()+'-'+(fechaS.getMonth() + 1)+'-'+fechaS.getDate();
+        var horaS = new Date(hora);
+        var horaS = horaS.getHours()+':'+horaS.getMinutes();
+        var confirmPopup = $ionicPopup.confirm({
+            title: 'Reservar actividad',
+            template: '<div style="text-align: center">¿Reservar actividad? <br> '+fechaS+' - '+horaS+' </div>',
+            cancelText: 'Cancelar',
+            cancelType: 'button-royal',
+            okText: 'Reservar',
+            okType: 'button-balanced'
+        });
+
+        confirmPopup.then(function(res) {
+            if(res) {
+                var link = 'http://localhost/api.php';
+                //2016-12-22 12:23:00
+                var fechaarreglada = fechaS+' '+horaS+':00';
+                console.log(fechaarreglada);
+                $http.post(link, {action: 'reserva', usuario: localStorage.iduser, fecha: fechaarreglada, actividad: id}).then(function (res){
+                    $scope.data = res.data;
+                    console.log($scope.data.error);
+                    if($scope.data.error == 1){
+                        $ionicPopup.alert({
+                              title: 'Ocupado!',
+                              template: '<center>Ese horario para esa actividad ya esta reservado, elija otro.</center>'
+                        });
+                    } else if ($scope.data.error == 2){
+                        $ionicPopup.alert({
+                              title: 'Problema de conexion!',
+                              template: '<center>Ha ocurrido un problema de conexión, pruebe mas tarde o contacte con recepcion.</center>'
+                        });
+                    } else {
+                        $ionicPopup.alert({
+                              title: 'Reservado!',
+                              template: '<center>Su reserva ha sido realizada.</center>'
+                        });
+                    }
+                });            
             } else {
               console.log('You are not sure');
             }
