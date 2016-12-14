@@ -1,14 +1,17 @@
 angular.module('starter.controllers', [])
+.controller('AppCtrl', function($scope, $ionicModal, $timeout, $http, $ionicPopup, $rootScope, $ionicLoading, $state, $ionicHistory) {
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout, $http, $ionicPopup) {
+  //GLOBAL VARIABLE FOR SERVER URL
+  $rootScope.serverurl = 'http://localhost/api.php';
+    $rootScope.show = function() {
+        $ionicLoading.show({
+          template: '<p>Sincronizando...</p><ion-spinner icon="lines"></ion-spinner>'
+        });
+    };
 
-  // With the new view caching in Ionic, Controllers are only called
-  // when they are recreated or on app start, instead of every page change.
-  // To listen for when this page is active (for example, to refresh data),
-  // listen for the $ionicView.enter event:
-  //$scope.$on('$ionicView.enter', function(e) {
-  //});
-
+    $rootScope.hide = function(){
+        $ionicLoading.hide();
+    };
   // Form data for the login modal
   $scope.loginData = {};
 
@@ -39,7 +42,8 @@ angular.module('starter.controllers', [])
     //API LINK
     var link = 'http://localhost/api.php';
     if($scope.loginData.username  && $scope.loginData.password) {
-        $http.post(link, {action: 'login', username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
+        $rootScope.show($ionicLoading);
+        $http.post($rootScope.serverurl, {action: 'login', username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
             $scope.data = res.data;
             console.log($scope.data.error);
             if($scope.data.error == 1){
@@ -50,16 +54,22 @@ angular.module('starter.controllers', [])
             } else {
                 localStorage.setItem("login", 1);
                 localStorage.setItem("iduser", $scope.data.ID);
+                localStorage.setItem("din", $scope.data.DATEIN);
+                localStorage.setItem("dout", $scope.data.DATEOUT);
+                localStorage.setItem("usertype", $scope.data.TYPE);
+                localStorage.setItem("room", $scope.data.ROOM);
+                localStorage.setItem("name", $scope.data.NAME);
                 $scope.userdata = {
                     id      : $scope.data.ID,
                     name    : $scope.data.NAME,
                     room    : $scope.data.ROOM,
-                    pic     : "http://localhost/img/"+$scope.data.PICTURE,
                     datein  : $scope.data.DATEIN,
                     dateout : $scope.data.DATEOUT,
+                    usertype : $scope.data.TYPE
                 }
                 $scope.closeLogin();
             }
+            $rootScope.hide($ionicLoading);
         });
     } else {
         $ionicPopup.alert({
@@ -69,23 +79,48 @@ angular.module('starter.controllers', [])
     }
 
   };
-    //CHECK IF USER IS LOGGED, IF NOT, WE GET THE LOGIN FORM
+    //CHECK IF USER IS LOGGED, IF NOT, WE GET THE LOGIN FORM  
    $scope.$on('$ionicView.enter', function(e) {
+        $scope.userdata = {
+            id      : localStorage.ID,
+            name    : localStorage.name,
+            room    : localStorage.room,
+            datein  : localStorage.din,
+            dateout : localStorage.dout,
+            usertype : localStorage.usertype
+        }
         if(localStorage.login == 0 || !localStorage.login) {
            $scope.modal.show();
          }
     });
 })
 
-.controller('ReservasCtrl', function($scope, $ionicPopup, $http) {
-  $scope.playlists = [
-    { title: 'Reggae', id: 1 },
-    { title: 'Chill', id: 2 },
-    { title: 'Dubstep', id: 3 },
-    { title: 'Indie', id: 4 },
-    { title: 'Rap', id: 5 },
-    { title: 'Cowbell', id: 6 }
-  ];
+.controller('ReservasCtrl', function($scope, $ionicPopup, $http, $rootScope, $ionicLoading, $state) {
+    
+    $scope.limitemostrar = 10;
+    $scope.reservas = [];
+    var iduser = 'admin';
+    $scope.$on('$ionicView.enter', function(e) {
+        if(localStorage.usertype == 2) {
+            iduser = localStorage.iduser;
+        } 
+        $rootScope.show($ionicLoading);
+        $http.post($rootScope.serverurl, {action: 'verreservas', iduser: iduser}).then(function (res){
+            $scope.reservas = res.data;
+            $rootScope.hide($ionicLoading);  
+        });
+    });
+
+        $scope.moredata = false;
+
+        $scope.loadMoreData=function()
+        {
+             console.log('Loading more', $scope.limitemostrar);
+             if ($scope.reservas.length > $scope.limitemostrar)
+                $scope.limitemostrar += $scope.limitemostrar; // load 20 more items
+                $scope.$broadcast('scroll.infiniteScrollComplete'); // need to call this when finish loading more data
+        };
+
     $scope.deleteActividad = function(id){
         console.log('Delete?');
         var confirmPopup = $ionicPopup.confirm({
@@ -99,7 +134,31 @@ angular.module('starter.controllers', [])
 
         confirmPopup.then(function(res) {
             if(res) {
-              console.log('You are sure');
+                $rootScope.show($ionicLoading);
+                $http.post($rootScope.serverurl, {action: 'deleteactividad', idactividad: id}).then(function (res){
+                $scope.data = res.data;
+                if($scope.data.error == 1){
+                    $ionicPopup.alert({
+                          title: 'Error!',
+                          template: '<center>Ha ocurrido un problema de conexión, pruebe mas tarde o contacte con recepcion.</center>'
+                    });
+                } else {
+                    var index = -1;		
+                    var comArr = eval( $scope.reservas );
+                    for( var i = 0; i < comArr.length; i++ ) {
+                            if( comArr[i].ID === id ) {
+                                    index = i;
+                                    break;
+                            }
+                    }
+                    $scope.reservas.splice( index, 1 );	
+                    $ionicPopup.alert({
+                          title: 'Cancelada!',
+                          template: '<center>Su reserva ha sido cancelada.</center>'
+                    });
+                }
+                    $rootScope.hide($ionicLoading);
+                });
             } else {
               console.log('You are not sure');
             }
@@ -122,11 +181,11 @@ angular.module('starter.controllers', [])
 
         confirmPopup.then(function(res) {
             if(res) {
-                var link = 'http://localhost/api.php';
                 //2016-12-22 12:23:00
                 var fechaarreglada = fechaS+' '+horaS+':00';
                 console.log(fechaarreglada);
-                $http.post(link, {action: 'reserva', usuario: localStorage.iduser, fecha: fechaarreglada, actividad: id}).then(function (res){
+                $rootScope.show($ionicLoading);
+                $http.post($rootScope.serverurl, {action: 'reserva', usuario: localStorage.iduser, fecha: fechaarreglada, actividad: id}).then(function (res){
                     $scope.data = res.data;
                     console.log($scope.data.error);
                     if($scope.data.error == 1){
@@ -145,13 +204,11 @@ angular.module('starter.controllers', [])
                               template: '<center>Su reserva ha sido realizada.</center>'
                         });
                     }
+                    $rootScope.hide($ionicLoading);
                 });            
             } else {
               console.log('You are not sure');
             }
         });
     }
-})
-
-.controller('PlaylistCtrl', function($scope, $stateParams) {
 });
