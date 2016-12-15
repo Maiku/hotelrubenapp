@@ -1,5 +1,5 @@
 angular.module('starter.controllers', [])
-.controller('AppCtrl', function($scope, $ionicModal, $timeout, $http, $ionicPopup, $rootScope, $ionicLoading, $state, $ionicHistory) {
+.controller('AppCtrl', function($scope, $ionicModal, $timeout, $http, $ionicPopup, $rootScope, $ionicLoading, $state, $ionicHistory, $interval) {
 
   //GLOBAL VARIABLE FOR SERVER URL
   $rootScope.serverurl = 'http://localhost/api.php';
@@ -93,35 +93,57 @@ angular.module('starter.controllers', [])
            $scope.modal.show();
          }
     });
-})
-.controller('RegistroCtrl', function($scope, $ionicPopup, $http, $rootScope, $ionicLoading, $state) {
     
+    
+    $interval( function() {
+        if(localStorage.usertype == 1) {
+            $http.post($rootScope.serverurl, {action: 'actualizar', id: localStorage.lastReserva}).then(function (res){
+                console.log('Buscando nuevas...');
+                $scope.reservas = res.data;
+                console.log('Nuevas reservas:'+ $scope.reservas.length);
+                if($scope.reservas.length > 0) {
+                    $scope.$emit('nuevasreservas', { cantidad: $scope.reservas.length});
+                    localStorage.updateReservas = localStorage.lastReserva;
+                } else {
+                    $rootScope.aviso = 0;
+                }
+            });
+        }
+    }, 5000);
+    
+    $scope.$on('nuevasreservas', function (event, args) {
+        $rootScope.aviso = args.cantidad;
+    });
 })
 .controller('ReservasCtrl', function($scope, $ionicPopup, $http, $rootScope, $ionicLoading, $state) {
     
     $scope.limitemostrar = 10;
     $scope.reservas = [];
     var iduser = 'admin';
-    $scope.$on('$ionicView.enter', function(e) {
-        if(localStorage.usertype == 2) {
-            iduser = localStorage.iduser;
-        } 
-        $rootScope.show($ionicLoading);
-        $http.post($rootScope.serverurl, {action: 'verreservas', iduser: iduser}).then(function (res){
-            $scope.reservas = res.data;
-            $rootScope.hide($ionicLoading);  
-        });
+   
+    if(localStorage.usertype == 2) {
+        iduser = localStorage.iduser;
+    } 
+  
+        
+    $rootScope.show($ionicLoading);
+    $http.post($rootScope.serverurl, {action: 'verreservas', iduser: iduser}).then(function (res){
+        $scope.reservas = res.data;
+        localStorage.lastReserva = $scope.reservas[0].ID;
+        $rootScope.hide($ionicLoading);  
     });
+    $scope.lastReserva = localStorage.lastReserva;
+    $scope.updateReservas = localStorage.updateReservas;
+    $scope.usertype = localStorage.usertype;
+    $scope.moredata = false;
 
-        $scope.moredata = false;
-
-        $scope.loadMoreData=function()
-        {
-             console.log('Loading more', $scope.limitemostrar);
-             if ($scope.reservas.length > $scope.limitemostrar)
-                $scope.limitemostrar += $scope.limitemostrar; // load 20 more items
-                $scope.$broadcast('scroll.infiniteScrollComplete'); // need to call this when finish loading more data
-        };
+    $scope.loadMoreData=function()
+    {
+         console.log('Loading more', $scope.limitemostrar);
+         if ($scope.reservas.length > $scope.limitemostrar)
+            $scope.limitemostrar += $scope.limitemostrar; // load 20 more items
+            $scope.$broadcast('scroll.infiniteScrollComplete'); // need to call this when finish loading more data
+    };
 
     $scope.deleteActividad = function(id){
         console.log('Delete?');
@@ -166,6 +188,11 @@ angular.module('starter.controllers', [])
             }
         });
     }
+    
+    $scope.$on('nuevasreservas', function (event, args) {
+        $rootScope.aviso = args.cantidad;
+    });
+    
     $scope.reservarActividad = function(id, fecha, hora){
         console.log('Reservar?');
         var fechaS = new Date(fecha);

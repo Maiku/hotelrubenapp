@@ -9,6 +9,10 @@
         </button>
       </ion-nav-buttons>
         
+      <ion-nav-buttons side="right" >
+            <span ng-if="userdata.usertype == 1 && aviso > 0" class="badge badge-assertive padding-vertical">{{aviso}} nuevos</span>                
+      </ion-nav-buttons>
+        
     </ion-nav-bar>
     <ion-nav-view name="menuContent"></ion-nav-view>
   </ion-side-menu-content>
@@ -31,17 +35,13 @@
                     SPA
                     <i class="icon ion-ios-pulse-strong"></i>                
                 </ion-item>
-                <ion-item menu-close  class="item-icon-left" href="#/app/actividades">
+                <ion-item menu-close ng-if="userdata.usertype == 2" class="item-icon-left" href="#/app/actividades">
                     Actividades
                     <i class="icon ion-ios-body"></i>                
                 </ion-item>
                 <ion-item menu-close  class="item-icon-left" href="#/app/reservas">
-                    Reservas
+                    Reservas <span ng-if="userdata.usertype == 1 && aviso > 0" class="badge badge-assertive">{{aviso}} nuevas</span>
                     <i class="icon ion-calendar"></i>
-                </ion-item>
-                <ion-item menu-close  class="item-icon-left" href="#/app/registro" ng-if="userdata.usertype == 1">
-                    Registro
-                    <i class="icon ion-person-add"></i>                
                 </ion-item>
             </ion-list>
             <div class="item item-divider"></div>
