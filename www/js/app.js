@@ -60,6 +60,15 @@ angular.module('starter', ['ionic', 'starter.controllers'])
           }
         }
     })
+    .state('app.registro', {
+        url: '/registro',
+        views: {
+          'menuContent': {
+            templateUrl: 'templates/registro.html',
+            controller: 'RegistroCtrl'
+          }
+        }
+    })
 
   .state('app.home', {
     url: '/home',

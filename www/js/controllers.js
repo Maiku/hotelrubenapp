@@ -94,7 +94,9 @@ angular.module('starter.controllers', [])
          }
     });
 })
-
+.controller('RegistroCtrl', function($scope, $ionicPopup, $http, $rootScope, $ionicLoading, $state) {
+    
+})
 .controller('ReservasCtrl', function($scope, $ionicPopup, $http, $rootScope, $ionicLoading, $state) {
     
     $scope.limitemostrar = 10;
