@@ -2,7 +2,7 @@ angular.module('starter.controllers', [])
 .controller('AppCtrl', function($scope, $ionicModal, $timeout, $http, $ionicPopup, $rootScope, $ionicLoading, $state, $ionicHistory, $interval) {
 
   //GLOBAL VARIABLE FOR SERVER URL
-  $rootScope.serverurl = 'http://localhost/api.php';
+  $rootScope.serverurl = 'https://labotigadelaloe.es/api.php';
   //SETTING THE LOADING SCREEN FOR AJAX
     $rootScope.show = function() {
         $ionicLoading.show({
@@ -33,51 +33,9 @@ angular.module('starter.controllers', [])
     if(logoff == 0) {
         localStorage.setItem("login", 0);
     }
-    $scope.modal.show();
+    $state.go('login');
   };
 
-  // Perform the login action when the user submits the login form
-  $scope.doLogin = function() {
-    console.log('Trying to login');
-    
-    if($scope.loginData.username  && $scope.loginData.password) {
-        $rootScope.show($ionicLoading);
-        $http.post($rootScope.serverurl, {action: 'login', username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
-            $scope.data = res.data;
-            console.log($scope.data.error);
-            if($scope.data.error == 1){
-                $ionicPopup.alert({
-                      title: 'Datos erroneos!',
-                      template: '<center>Revise su usuario y su contraseña</center>'
-                });
-            } else {
-                localStorage.setItem("login", 1);
-                localStorage.setItem("iduser", $scope.data.ID);
-                localStorage.setItem("din", $scope.data.DATEIN);
-                localStorage.setItem("dout", $scope.data.DATEOUT);
-                localStorage.setItem("usertype", $scope.data.TYPE);
-                localStorage.setItem("room", $scope.data.ROOM);
-                localStorage.setItem("name", $scope.data.NAME);
-                $scope.userdata = {
-                    id      : $scope.data.ID,
-                    name    : $scope.data.NAME,
-                    room    : $scope.data.ROOM,
-                    datein  : $scope.data.DATEIN,
-                    dateout : $scope.data.DATEOUT,
-                    usertype : $scope.data.TYPE
-                }
-                $scope.closeLogin();
-            }
-            $rootScope.hide($ionicLoading);
-        });
-    } else {
-        $ionicPopup.alert({
-            title: 'Campos vacios!',
-            template: '<center>Introduzca sus datos de acceso</center>'
-        });
-    }
-
-  };
     //CHECK IF USER IS LOGGED, IF NOT, WE GET THE LOGIN FORM  
    $scope.$on('$ionicView.enter', function(e) {
         $scope.userdata = {
@@ -89,7 +47,7 @@ angular.module('starter.controllers', [])
             usertype : localStorage.usertype
         }
         if(localStorage.login == 0 || !localStorage.login) {
-           $scope.modal.show();
+            $state.go('login');
          }
     });
     
@@ -240,5 +198,66 @@ angular.module('starter.controllers', [])
               console.log('You are not sure');
             }
         });
+    }
+}).controller('LoginCtrl', function($scope, LoginService,$rootScope, $ionicPopup, $state) {
+    $scope.loginData = {};
+ 
+    $scope.doLogin = function() {
+        LoginService.loginUser($scope.loginData.username, $scope.loginData.password, $rootScope.serverurl).success(function(data) {
+                console.log(data);
+                //var data = data.data;
+                if(data.error == 1){
+                    deferred.reject('Wrong credentials.');
+                } else {
+                    localStorage.setItem("login", 1);
+                    localStorage.setItem("iduser", data.ID);
+                    localStorage.setItem("din", data.DATEIN);
+                    localStorage.setItem("dout", data.DATEOUT);
+                    localStorage.setItem("usertype", data.TYPE);
+                    localStorage.setItem("room", data.ROOM);
+                    localStorage.setItem("name", data.NAME);
+                    var userdata = {
+                        id      : data.ID,
+                        name    : data.NAME,
+                        room    : data.ROOM,
+                        datein  : data.DATEIN,
+                        dateout : data.DATEOUT,
+                        usertype : data.TYPE
+                    }
+
+                }
+            $state.go('app.home');
+        }).error(function(data) {
+            var alertPopup = $ionicPopup.alert({
+                title: 'Login failed!',
+                template: 'Please check your credentials!'
+            });
+        });
+    }
+}).service('LoginService', function($q,$http) {
+    return {
+        loginUser: function(name, pw, sv) {
+            var deferred = $q.defer();
+            var promise = deferred.promise;
+            $http.post('https://labotigadelaloe.es/api.php', {action: 'login', username : name, password: pw}).then(function (res){
+                var data = res.data;
+                    console.log(data.error);
+                if(data.error == 1){
+                    deferred.reject(data);
+                } else {
+                    deferred.resolve(data);
+                }
+            });
+
+            promise.success = function(fn) {
+                promise.then(fn);
+                return promise;
+            }
+            promise.error = function(fn) {
+                promise.then(null, fn);
+                return promise;
+            }
+            return promise;
+        }
     }
 });
