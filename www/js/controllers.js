@@ -3,15 +3,16 @@ angular.module('starter.controllers', [])
 
   //GLOBAL VARIABLE FOR SERVER URL
   $rootScope.serverurl = 'http://localhost/api.php';
+  //SETTING THE LOADING SCREEN FOR AJAX
     $rootScope.show = function() {
         $ionicLoading.show({
           template: '<p>Sincronizando...</p><ion-spinner icon="lines"></ion-spinner>'
         });
     };
-
     $rootScope.hide = function(){
         $ionicLoading.hide();
     };
+    
   // Form data for the login modal
   $scope.loginData = {};
 
@@ -39,8 +40,6 @@ angular.module('starter.controllers', [])
   $scope.doLogin = function() {
     console.log('Trying to login');
     
-    //API LINK
-    var link = 'http://localhost/api.php';
     if($scope.loginData.username  && $scope.loginData.password) {
         $rootScope.show($ionicLoading);
         $http.post($rootScope.serverurl, {action: 'login', username : $scope.loginData.username, password: $scope.loginData.password}).then(function (res){
@@ -94,7 +93,7 @@ angular.module('starter.controllers', [])
          }
     });
     
-    
+    //SETTING THE FUNCTION TO CHECK FOR NEW UPDATES
     $interval( function() {
         if(localStorage.usertype == 1) {
             $http.post($rootScope.serverurl, {action: 'actualizar', id: localStorage.lastReserva}).then(function (res){
@@ -111,6 +110,7 @@ angular.module('starter.controllers', [])
         }
     }, 5000);
     
+    //HOOK FOR TRIGGERING NEW UPDATES
     $scope.$on('nuevasreservas', function (event, args) {
         $rootScope.aviso = args.cantidad;
     });
@@ -119,13 +119,13 @@ angular.module('starter.controllers', [])
     
     $scope.limitemostrar = 10;
     $scope.reservas = [];
+    
     var iduser = 'admin';
-   
     if(localStorage.usertype == 2) {
         iduser = localStorage.iduser;
     } 
   
-        
+    //LOADING RESERVAS
     $rootScope.show($ionicLoading);
     $http.post($rootScope.serverurl, {action: 'verreservas', iduser: iduser}).then(function (res){
         $scope.reservas = res.data;
@@ -144,7 +144,8 @@ angular.module('starter.controllers', [])
             $scope.limitemostrar += $scope.limitemostrar; // load 20 more items
             $scope.$broadcast('scroll.infiniteScrollComplete'); // need to call this when finish loading more data
     };
-
+    
+    //DELETE RESERVAS
     $scope.deleteActividad = function(id){
         console.log('Delete?');
         var confirmPopup = $ionicPopup.confirm({
@@ -188,11 +189,11 @@ angular.module('starter.controllers', [])
             }
         });
     }
-    
+    //HOOK FOR TRIGGERING NEW UPDATES
     $scope.$on('nuevasreservas', function (event, args) {
         $rootScope.aviso = args.cantidad;
     });
-    
+    //MAKING RESERVAS
     $scope.reservarActividad = function(id, fecha, hora){
         console.log('Reservar?');
         var fechaS = new Date(fecha);
